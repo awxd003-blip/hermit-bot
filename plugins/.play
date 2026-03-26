@@ -1,0 +1,46 @@
+module.exports = {
+    name: "play",
+    alias: ["song", "audio"],
+    desc: "Download a song in MP3 from YouTube",
+    category: "Downloader",
+
+    start: async (client, m, { text }) => {
+        try {
+            if (!text) {
+                return client.sendMessage(m.chat, { 
+                    text: "❗ *Please enter a song name or YouTube link*\n\nExample: `.play pasoori`" 
+                });
+            }
+
+            const axios = require("axios");
+
+            // API — searches YouTube + gives MP3 audio
+            const api = `https://api.dreaded.tech/youtube/play?query=${encodeURIComponent(text)}`;
+
+            const { data } = await axios.get(api);
+
+            if (!data || !data.status) {
+                return client.sendMessage(m.chat, { text: "❗ No audio found!" });
+            }
+
+            // Song info message
+            await client.sendMessage(m.chat, {
+                text: `🎵 *Downloading Song...*\n\n🎶 Title: *${data.title}*\n⏱ Duration: *${data.duration}*\n\nPlease wait...`
+            });
+
+            // Send audio
+            await client.sendMessage(m.chat, {
+                audio: { url: data.audio_url },
+                mimetype: "audio/mpeg",
+                ptt: false,
+                fileName: `${data.title}.mp3`
+            });
+
+        } catch (err) {
+            console.log(err);
+            return client.sendMessage(m.chat, { 
+                text: "⚠️ Error fetching audio, please try again later." 
+            });
+        }
+    }
+};
